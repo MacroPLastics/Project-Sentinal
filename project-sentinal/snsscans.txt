@@ -1,0 +1,121 @@
+#file for scan functions in sns
+
+#to do
+#add back logging and make it work
+
+##########ultilities###########
+
+###variables###
+
+discover_output_file="iplist.txt"
+subnet=$(ifconfig | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v '127.0.0.1' | head -n1 | cut -d. -f1-3)
+nmap_log_dir="~/project-sentinal/logs/nmap"
+scan_output_file="$nmap_log_dir/adv_discover_$(date +"%Y%m%d_%H%M%S").nmap"
+
+
+###functions###
+
+#function to delete .nmap files in /logs/nmap
+cleanup_logs(){
+    local log_directory="nmap_log_dir"
+
+    if [ -d "$log_directory" ]; then
+        echo "Cleaning up nmap logs in $log_directory..."
+        find "$log_directory" -type f -name "*.nmap" -delete
+        echo "Cleanup complete."
+    else
+        echo "Log directory $log_directory does not exist."
+    fi
+}
+
+#function to make the nmap dir call in main script
+check_create_log_dir() {
+    if [ ! -d "$nmap_log_dir" ]; then
+        mkdir -p "$nmap_log_dir"
+    fi
+}
+
+#function to get the subnet and echo it
+get_subnet(){
+    subnet=$(ifconfig | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v '127.0.0.1' | head -n1 | cut -d. -f1-3)
+    echo "Subnet: $subnet"
+}
+
+#function to get the subnet but not echo it
+get_subnet_quiet(){
+     subnet=$(ifconfig | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v '127.0.0.1' | head -n1 | cut -d. -f1-3)
+}
+
+#function to make discover_output_file
+make_iplist(){
+    touch "$discover_output_file"
+}
+
+###########Scans###########
+
+#function to find alivve hosts
+discover_hosts(){
+    local discover_output_file="$1"
+        echo "finding hosts on $subnet"
+            echo "logging hosts to: iplist.txt"
+
+            for i in {1..254}; do
+        ip="${subnet}.${i}"
+        sudo fping -c 1 -t 100 "${ip}" &>/dev/null
+        if [ $? -eq 0 ]; then
+            echo "${ip}" > iplist.txt
+                cat iplist.txt
+        fi
+    done
+}
+
+###basic-specified###
+
+#function to do a basic scan on a specified target
+basic_specified_scan(){
+        read -rp "Please enter the IP you would like to scan:" basic_scan_ip
+            echo "starting scan on $subnet..."
+                sudo nmap -Pn -sS -T4 -p 1-1000 "$basic_scan_ip"
+                    #echo "scan complete. logs are in $scan_output_file"
+}
+
+###advanced-specified###
+
+#function to do an advanced scan on a specified target
+adv_specified_scan(){
+        read -rp "Please enter the IP you would like to scan:" adv_scan_ip
+            echo "Starting scan on $subnet..."
+                sudo nmap -Pn -A -sV -T4 -p- "$adv_scan_ip"
+                    #echo "scan complete. logs are in $scan_output_file"
+}
+
+###ultimate-specified###
+
+#the ultimate nmap scan
+ult_specified_scan(){
+        read -rp "Please enter the IP you would like to scan:" ult_scan_ip
+            echo "This will take a while. be patient."
+                echo "Starting scan on $subnet..."
+                    sudo nmap -Pn -A -sV -sS -sU -T4 -p- --script vuln "$ult_scan_ip"
+                        #echo "scan complete. logs are in $scan_output_file"
+}
+
+###basic-discover###
+
+#function to run a basic nmap scan using targets from discover_hosts and iplist.txt
+basic_discover_scan(){
+        echo "Starting basic nmap discover scan on $subnet..."
+            discover_hosts
+                sudo nmap -Pn -sS -T4 -p 1-1000 -iL "$discover_output_file"
+                    #echo "basic nmap discover scan complete. logs are in $scan_output_file"
+}
+
+###advanced-discover###
+
+#function to run an advanced nmap scan on targets from iplists
+adv_discover_scan(){
+        echo "Starting advanced nmap discover scan on $subnet..."
+            discover_hosts
+                sudo nmap -sn -Pn -T4 -iL "$discover_output_file"
+                    #echo "scan complete. logs are in $scan_output_file"
+}

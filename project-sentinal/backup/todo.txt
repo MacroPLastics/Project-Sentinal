@@ -1,0 +1,5 @@
+# file for todos in sns
+
+1. make the submenus and menu logic for the script
+2. add the fucntions
+3. hope for the best and debug

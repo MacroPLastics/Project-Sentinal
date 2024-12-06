@@ -1,0 +1,64 @@
+#A file to hold wireshark functions and variables for sns
+
+
+new_ws_output(){
+
+    ws_output_2="wsoutput2.pcap"
+
+        read -rp "Do you want to make a new file to capture to or continue without saving? y/n/q:" new_output_answer
+
+            case "$new_output_answer" in
+                [Yy])
+                echo "Making new Wireshark output file..."
+                touch "$ws_output_2"
+                ;;
+                [Nn])
+                echo "continuing without saving..."
+                wireshark #standard wireshark sesh
+                ;;
+                [Qq])
+                echo "Exiting..."
+                ;;
+                *)
+                echo "invalid option"
+                exit 0
+                ;;
+            esac
+
+        wireshark -w "$ws_output_2" #starts ws using wsoutput2.pcap
+}
+
+
+
+start_ws(){
+
+        ws_output="wsoutput.pcap"
+
+            if [ -e "$ws_output" ]; then
+
+                read -rp "Do you want to overwrite last Wireshark pcaps? y/n/q" overwrite_answer
+
+                    case "overwrite_answer" in
+                        [Yy])
+                        echo "overwriting..."
+                        ;;
+                        [Nn])
+                        new_ws_output
+                        ;;
+                        [Qq])
+                        echo "Exiting..."
+                        exit 0
+                        ;;
+                        *)
+                        echo "invalid option"
+                        exit1
+                        ;;
+                    esac
+
+                else
+
+            touch "$ws_output"
+        fi
+    wireshark -w "$ws_output" #starts ws using wsoutput.pcap
+}
+

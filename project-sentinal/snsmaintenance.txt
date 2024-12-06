@@ -1,0 +1,80 @@
+#A file to hold sns maintenace functions
+
+###variables###
+package_manager=$(detect_package_manager)
+ws="wireshark"
+nm="nmap"
+fp="fping"
+
+###update###
+
+#function to detect your pm
+detect_package_manager() {
+    if command -v apt-get &>/dev/null; then
+        echo "apt"
+    elif command -v yum &>/dev/null; then
+        echo "yum"
+    elif command -v dnf &>/dev/null; then
+        echo "dnf"
+    elif command -v zypper &>/dev/null; then
+        echo "zypper"
+    else
+        echo "unknown"
+    fi
+}
+
+#fucntion to list your pm
+echo_pm(){
+    echo "Your Package Manager is: $package_manager"
+}
+
+#function to update your pm
+update_pm(){
+     local pm=$(detect_package_manager)
+        echo "Updating $package_manager..."
+             case "$pm" in
+        "apt")
+            sudo apt-get update -y
+            ;;
+        "yum")
+            sudo yum check-update
+            ;;
+        "dnf")
+            sudo dnf check-update -y
+            ;;
+        "zypper")
+            sudo zypper refresh
+            ;;
+        *)
+        echo "unsupported package manager. please manually update."
+        exit 0
+    esac
+}
+
+#function to install dependancies
+install_dep(){
+    read -rp "Sentinal Network Scanner requires the following packages: $ws $nm $fp. is this ok? y/n" install_choice
+        id [[install_choice =~ ^[Yy]$ ]]; then
+            case "$pm" in
+            "apt")
+                sudo apt-get install -y $ws $nm $fp
+                ;;
+            "yum")
+                sudo yum install -y $ws $nm $fp
+                ;;
+            "dnf")
+                sudo dnf install -y $ws $nm $fp
+                ;;
+            "zypper")
+                sudo zypper install -y $ws $nm $fp
+                ;;
+            *)
+            echo "unsupported package manager. please manually install $ws $nm $fp."
+            exit 0
+            ;;
+        esac
+    else
+        echo "Installation canceled"
+    fi
+}
+
