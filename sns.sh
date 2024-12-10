@@ -29,16 +29,18 @@ deauth_submenu(){
                 case $deauth_choice in
                     [Ss])
                         #gets info for the deauth script
-                        read -rp "Enter the target MAC address: " target_mac
-                        read -rp "Enter the AP MAC address: " ap_mac
-                        read -rp "Enter the interface in monitor mode (e.g., wlan0mon): " iface
-                            python3 deauth.py device "$ap_mac" "$iface" "$target_mac"
+			iwlist wlan0 scan | grep Address
+                        	read -rp "Enter the target MAC address: " target_mac
+                        	read -rp "Enter the AP MAC address: " ap_mac
+                        	read -rp "Enter the interface in monitor mode (e.g., wlan0mon): " iface
+                    python3 snsdeauth.py device "$ap_mac" "$iface" "$target_mac"
                     ;;
                     [Aa])
                         #Deauth all
-                        read -rp "Enter the AP MAC address: " ap_mac
-                        read -rp "Enter the interface in monitor mode (e.g., wlan0mon): " iface
-                            python3 deauth.py all "$ap_mac" "$iface"
+			iwlist wlan0 scan | grep Address
+                        	read -rp "Enter the AP MAC address: " ap_mac
+                        	read -rp "Enter the interface in monitor mode (e.g., wlan0mon): " iface
+                            python3 snsdeauth.py all "$ap_mac" "$iface"
                     ;;
                     [Rr])
                         return_to_main_menu
@@ -230,7 +232,8 @@ main_menu(){
                 echo "2.    Wireshark"
                 echo "3.    debugging"
                 echo "4.    maintenance"
-                echo "5.    quit"
+		echo "5.    deauth"
+                echo "6.    quit"
 
                 read -rp ">" main_menu_choice
                     case $main_menu_choice in
@@ -246,7 +249,10 @@ main_menu(){
                         4)
                             maintenance_submenu
                         ;;
-                        [5Qq])
+			5)
+			    deauth_submenu
+			;;
+                        [6Qq])
                             echo "Exiting..."
                                 exit 0
                         ;;
